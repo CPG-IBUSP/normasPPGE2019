@@ -1,0 +1,333 @@
+---
+title: "Subsídios para a pontuação da produção para credenciamento no PPGE"
+author: "Coordenação do PPGE"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+---
+
+
+```{r knitr_init, echo=FALSE, cache=FALSE}
+library(knitr)
+library(rmdformats)
+library(dplyr)
+## Global options
+options(max.print="75")
+opts_chunk$set(echo=FALSE,
+               cache=TRUE,
+               prompt=FALSE,
+               tidy=TRUE,
+               comment=NA,
+               message=FALSE,
+               warning=FALSE)
+opts_knit$set(width=75)
+```
+
+
+```{r data prep}
+## Leitura dos dados
+## Ultima classificacao QUALIS CAPES (quadrienio 2013-2016) 
+qualis <- read.csv2("qualis_2013_2016.csv", as.is=TRUE, header=TRUE)
+qualis$estrato[qualis$estrato=="C "] <- "C"
+## Lista de periodicos da SCOPUS com Fator e quantil de impacto por area (2018)
+scopus <- read.csv2("scopus_journals_2018.csv", as.is = TRUE) 
+## Corrige ISSN que comecam com zeros
+for(i in 1:nrow(scopus)){
+    X <- nchar(scopus$Print.ISSN[i])
+    Y <- nchar(scopus$E.ISSN[i])
+    if(X<8&X>0)
+        scopus$Print.ISSN[i] <- paste(paste(rep("0",8-X),collapse=""), scopus$Print.ISSN[i], sep="")
+    if(Y<8&Y>0)
+        scopus$E.ISSN[i] <- paste(paste(rep("0",8-Y),collapse=""), scopus$E.ISSN[i], sep="")
+}
+
+## Identificando o maior quantil de impacto de cada periodico
+scopus.m <-  aggregate(scopus$Percentile,
+                      by = list(titulo = scopus$Title, P.ISSN = scopus$Print.ISSN, E.ISSN = scopus$E.ISSN),
+                      FUN = max)
+names(scopus.m)[4] <- "qIF"
+## Retirando hifen do codigo ISSN da tabela QUALIS (para cruzar com SCOPUS, que nao tem hifen)
+qualis$ISSN2 <- gsub("-", "", qualis$ISSN)
+## Cruza os periodicos qualis com lista SCOPUS usando ISSN da versao impressa
+qsp <- merge(qualis, scopus.m, by.x = "ISSN2", by.y = "P.ISSN", all.x=TRUE, suffixes = c(".capes", ".scopus"), nodups=TRUE)
+## Cruza os periodicos qualis com lista SCOPUS usando ISSN da versao eletronica
+qse <- merge(qualis, scopus.m, by.x = "ISSN2", by.y = "E.ISSN", all.x=FALSE, suffixes = c(".capes", ".scopus"), nodups=TRUE)
+## Junta as duas listas, mantendo apenas os titulos que estao na SCOPUS
+## tambem retira os titulos duplicados e retem o maior valor de IF dos titulos duplicados
+tmp <- rbind(qsp[,-6],qse[,-6])
+capes.scopus <- aggregate(tmp$qIF,
+                          by = list(titulo = tmp$titulo.scopus, estrato.antigo = tmp$estrato),
+                          max, na.rm=TRUE)
+names(capes.scopus)[3] <- "qIF"
+## Classifica os periodicos de acordo com o novo QUALIS, baseado no quantil máximo de IF
+capes.scopus$estrato.novo <- cut(capes.scopus$qIF, breaks = c(0, 12.5, 25, 37.5, 50, 62.5, 75, 87.5, 100),
+                        labels = c("B4","B3","B2","B1","A4","A3","A2","A1"))
+capes.scopus$estrato.novo <- factor(capes.scopus$estrato.novo, levels = rev(levels(capes.scopus$estrato.novo)))
+## Adiciona pontuação de acordo com nossas regras atuais
+capes.scopus$pontos <- 0
+capes.scopus$pontos[capes.scopus$estrato.antigo=="A1"] <- 100
+capes.scopus$pontos[capes.scopus$estrato.antigo=="A2"] <- 85
+capes.scopus$pontos[capes.scopus$estrato.antigo=="B1"] <- 70
+capes.scopus$pontos[capes.scopus$estrato.antigo=="B2"] <- 55
+capes.scopus$pontos[capes.scopus$estrato.antigo=="B3"] <- 40
+capes.scopus$pontos[capes.scopus$estrato.antigo=="B4"] <- 25
+capes.scopus$pontos[capes.scopus$estrato.antigo=="B5"] <- 10
+```
+
+# Introdução
+
+Temos que incluir em nosso novo regulamento os critérios de pontuação da
+produção científica e de outras atividades dos orientadores, para fins
+de credenciamento e recredenciamento. 
+
+A CCP planejava realizar uma discussão desses critérios no ano que
+vem, independente de nossa norma interna. Uma exigência da
+Pró-Reitoria de PG da USP nos obrigou a adiantar esta discussão (ver a
+seguir).
+
+Este documento apresenta a proposta da CCP para discussão na Plenária
+do Programa. Também selecionamos informações que fundamentam a
+proposta.
+
+## Exigências da PRPG
+
+Atualmente definimos a pontuação da produção para credenciamento em
+norma interna que fica em nosso site, para nos dar mais
+flexibilidade. O Pró-reitor de Pós-Graduação impôs a todos os
+Programas que a pontuação esteja nas normas. Além disto, exigiu que a
+nova pontuação:
+
+* Valorize produção acima da mediana de qualidade ou impacto
+* Inclua produção com egressos e/ou discentes
+
+O novo Regimento da Pós-Graduação da USP nos obriga a enviar novo
+regulamento, para apreciação pela PRPG.  A aprovação desse novo
+regulamento depende de atendermos as imposições do
+Pró-Reitor. Esgotamos nossas possibilidades de negociação a
+respeito. O novo regulamento deve ser enviado ao Conselho de PG da USP
+até março de 2020. Isto significa que temos que encaminhar nossa
+proposta à CPG em dezembro de 2019.
+
+## Mudanças na avaliação CAPES
+
+Em agosto de 2019 a CAPES apresentou mudanças em sua avaliação aos
+coordenadores. Houve mudanças no QUALIS e na avaliação da produção do
+programa. As mudanças importantes para a pontuação da produção são:
+
+- Cada periódico terá apenas um estrato QUALIS, e não mais um estrato
+  definido por cada área de conhecimento.
+- O estrato QUALIS dos periódicos é definido pelo *quantil de fator de
+  impacto* (**qIF**), que é a proporção de periódicos de uma área que tem fator
+  de impacto (IF) menor do que o periódico avaliado[^1].
+  - Serão usadas as áreas de conhecimento e valores de qIF das bases
+    [https://www.scopus.com/](SCOPUS) e
+    [https://jcr.clarivate.com](Clarivate JCR).
+  - Se o periódico tiver mais de um valor de qIF registrado
+    nas bases será usado o maior valor [^2].
+- Os indicadores de produçao dos docentes e do programa serão somas
+  dos qIF por artigos publicado. 
+- Para indicadores de formação, os qIF de produções sem participação de
+  discentes ou egressos é dividida pela metade, e então somados aos
+  qIF das produções com participação.
+
+### Nova tabela QUALIS
+
+* Passamos a ter quatro estratos *A* e quatro *B*, separados por
+  intervalos regulares de 12,5.
+* Os estratos *A* passam a indicar periódicos com qIF acima de 50% (ou
+  seja, acima da mediana de IF)
+
+| Estrato  | qIF  |
+|:-:|:-:|
+| A1  | > 87,5  |
+| A2  | 87,5 - 75  |
+| A3  | 75 - 62,5  |
+| A4  | 62,5 - 50  |
+| B1  | 50 - 37,5  |
+| B2  | 37,5 - 25  |
+| B3  | 25 - 12,5  |
+| B4  | < 12,5  |
+
+
+## Propostas adicionais da CCP
+
+* Aumentar a ênfase em outras contribuições dos orientadores ao
+  programa, além de sua produção;
+* Aperfeiçoar a pontuação para estas contribuições;
+* Na avaliação de produção contemplar produtos e ações para divulgação
+  e aplicação do conhecimento científico para benefício da sociedade.
+
+  
+## Nosso sistema atual de credenciamento
+
+* Adotamos pontuação de produção e outras atividades
+* É preciso ter pelo menos 210 pontos de produção. 
+* A pontuação dos artigos é A1 = 100 pontos, A2 = 85 , B1 = 70, B2 =
+  55 , B3 = 40 , B4 = 25 , B5 = 10.
+* Capítulos de livros podem acumular até 140 pontos
+* Recredenciamento a cada 3 anos
+* Para recredenciamento é preciso, além dos 210 pontos de produção, 4
+  créditos em atividades de contribuição ao funcionamento do programa,
+  cujo cálculo está detalhado em nosso site
+  (http://www.posecologia.ib.usp.br/2017-07-14-22-11-28/credenciamento.html).
+
+
+# Nossa proposta
+
+Nesta seção apresentamos a proposta de pontuação de artigos e
+avaliamos sua equivalência com a pontuação anterior. Os demais
+critérios para credenciamento estão na minuta enviada a todos os
+orientadores do Programa.
+
+## Proposta de pontuação
+
+- **A soma de qIF de artigos publicados nos últimos 36 meses deve ser no
+  mínimo de 160**.
+- Outras modalidades de produção são pontuadas buscando uma
+  equivalência em impacto ou horas de trabalho (ver minuta).
+- Produto com discentes ou egressos ganham bônus: pontuação
+  multiplicada por 1,25.
+
+Com esta proposta buscamos:
+
+* Atender às demandas da PRPG:
+  * sistema de pontuação objetivo;
+  * a soma de 160 pontos de qIF equivale a 3 artigos de IF superior à
+    mediana. Mas contempla diferentes perfis de produção (*e.g*, mais artigos
+    em periódicos de menor IF ou menor número em periódicos de maior
+    IF).
+  * valorizar produção com discente ou egresso.
+* Acompanhar as novas metodologias de avaliação de produção da CAPES;
+* Deixar margem para os outros critérios sugeridos pela CCP (outras
+  contribuições, outros tipos de produção).
+
+## Equivalência com o sistema anterior
+
+Para as análise a seguir usamos os periódicos classificados pelo
+QUALIS antigo da área de Biodiversidade e o qIF que consta na base
+SCOPUS para 2018.  O QUALIS antigo é a classificação de todos os
+periódicos da área, usada na última avaliação quadrienal (2013-2016), 
+somando 'r length(unique(qualis$ISSN))` registros de ISSN [^3].
+Destes, `r length(unique(qsp$titulo.scopus)) + length(unique(qse$titulo.scopus))` registros ISSN estão na base SCOPUS,
+totalizando `r nrow(capes.scopus)` títulos.
+
+### Qualis antigo e novo
+
+Embora haja alguma associação entre as duas classificações QUALIS, há também
+muitos títulos que mudaram de estratos. Há muitas razões para isto,
+inclusive a criação dos estratos A3 e A4 e o rebaixamento de
+periódicos de alto impacto mas considerados de pouca aderência na
+classificação antiga.
+
+
+```{r qualis anterior e novo}
+## Comparacao das classificacoes QUALIS
+t1 <- with(capes.scopus, table(estrato.novo, estrato.antigo))
+kable(t1, caption="Número de periódicos área de Biodiversidade por combinação de seu estrato QUALIS da avaliação anterior (colunas) e da avaliação atual (linhas). Dados: todos os periódicos da área que constam no QUALIS antigo e no SCOPUS de 2018.")
+```
+
+
+```{r simulacoes}
+## Simulacao: pontuacao anterior e atual de 1 a 6 artigos tomados ao acaso da lista
+nrep <- 1e5
+n.max <- 6
+results <- matrix( nrow = nrep, ncol = 2)
+colnames(results) <- c("atual", "proposta")
+for(i in 1:nrep){
+    j <- sample(1:nrow(capes.scopus), size = sample(1:n.max, size =1), replace = TRUE)
+    results[i,] <-  c( sum(capes.scopus$pontos[j], na.rm=TRUE),
+                      sum(capes.scopus$qIF[j], na.rm=TRUE))
+}
+
+
+## Pontuacao de combinacoes que somam 210 pontos
+f1 <- function(x, i1,  i2) {
+    j <- sample(1:nrow(x), size = 100, replace = TRUE)
+    s1 <- cumsum(x[j,i1])
+    s2 <- cumsum(x[j,i2])
+    c(s1[min(which(s1>209))], s2[min(which(s1>209))])
+    }
+## Simulacoes
+results2 <- matrix( nrow = nrep, ncol = 2)
+colnames(results2) <- c("atual", "proposta")
+for(i in 1:nrep)
+    results2[i,] <- f1(capes.scopus, 5, 3)
+
+```
+### Pontuação antiga e nova
+
+Para avaliar a relação entre a pontuação antiga e nova simulamos
+conjuntos de artigos e calculamos a sua pontuação pelos dois
+sistemas. Para isto sorteamos com reposição `r nrep` amostras de
+títulos da lista. As amostras tinham entre um e seis títulos, com
+igual probabilidade. Estas combinações geraram pontuações pelo sistema
+antigo variando de `r min(results[,1])` a `r max(results[,1])`.
+
+As duas pontuações das combinações simuladas são proporcionais, embora
+com bastante variação. Mais importante, há pouquíssimas combinações que
+teria pontuação mínima para credenciamento no sistema antigo (210
+pontos) mas não teriam no sistema novo (160 pontos). 
+
+```{r graficos simulacoes 1, fig.cap="Pontuação proposta em função da atual para produções simuladas de uma a seis artigos, sorteadas da lista de periódicos da área de Biodiversidade. A linha azul marca a pontuação mínima para credenciamento no sistema atual. A linha vermelha marca a pontuação mínima no novo sistema proposto."}
+plot(results, cex=0.25, col="darkgrey")
+abline(h=160, col="red", lty=2)
+abline(v=210, col="blue", lty=2)
+text(50,500, paste(round(sum(results[,1]<210&results[,2]>=160)/nrow(results)*100,2), "%"), cex=1.5)
+text(500,250, paste(round(sum(results[,1]>=210&results[,2]>=160)/nrow(results)*100,2), "%"), cex=1.5)
+text(150,5, paste(round(sum(results[,1]<210&results[,2]<160)/nrow(results)*100,2), "%"), cex=1.5)
+text(500,50, paste(round(sum(results[,1]>=210&results[,2]<160)/nrow(results)*100,2), "%"), cex=1.5)
+```
+
+Para verificar este resultado, simulamos amostras em que novos títulos
+eram acrescentados até que a pontuação pelo sisetma antigo permitisse
+credenciamento. Estas simulações aproximam combinações de artigos com
+o mínimo de pontos para o credenciamento, pelo sistema antigo.  Apenas
+`r round(sum(results2[,2]<160)/nrow(results2)*100,2)`% das combinações
+tiveram pontuação menor que 160 pelo sistema proposto.
+
+```{r graficos simulacoes 2, fig.cap="Distribuição de pontos pelo sistema proposto de combinações de publicações com pontuação mínima para credenciamento pelo sistema antigo"}
+hist(results2[,2], main="", xlab="Pontuação proposta")
+abline(v=160, lty=2, col="red")
+```
+
+Em resumo, o novo sistema de pontuação da produção de artigos tem
+chance virtualmente nula de impedir credenciamento de alguém que
+tenha pontuação para credenciamento pelo sistema antigo.
+
+# Arquivos de dados
+
+
+```{r save csvs}
+write.table(qualis, file ="qualis2016.csv")
+write.table(scopus.m, file ="scopus2018.csv")
+write.table(capes.scopus, file="qualisXscopus.csv")
+```
+
+
+Arquivos usados nas análise acima. Podem ser importados para qualquer
+planilha eletrônica. Sugerimos que os(as) orientadores(as) verifiquem
+antes da plenária os qIFs dos periódicos onde têm publicado seus
+artigos. Esses dados estão na planilha da SCOPUS. Isto vai ajudar a
+avaliarmos a pontuação proposta.
+
+* [QUALIS 2016](qualis2016.csv): classificação QUALIS usada na
+  avaliação quadrienal 2013-2016 da área de Biodiversidade. Baixado do
+  sistema [Sucupira](https://sucupira.capes.gov.br)
+* [Scopus 2018](scopus2018.csv): qIF máximo dos periódicos que constam na base SCOPUS 2018. Baixado da SCOPUS.
+* [QUALIS 2016 com qIF 2018](qualisXscopus.csv): títulos do QUALIS
+  2013-2016 da Biodiversidade que constam na base Scopus 2018, com
+  seus qIFs máximos.
+
+
+[^1]: Por exemplo: um periódico com quantil de IF = 95 tem fator de
+    impacto (IF) maior do que 95% dos periódicos da área.
+
+[^2]: Em geral os periódicos têm mais de um quantil de IF, porque
+    estão classificados em mais de uma base ou em mais de uma área de
+    conhecimento na mesma base. O uso do quantil máximo acomoda
+    diferenças dos impactos médios entre áreas, sendo a opção de menor
+    prejuízo para área que têm IFs médios menores.
+
+[^3]: O que não é mesmo que o número de títulos porque as versões
+    impressas e eletrônicas do periódicos têm ISSN separados.
