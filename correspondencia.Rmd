@@ -83,8 +83,9 @@ de credenciamento e recredenciamento.
 
 A CCP planejava realizar uma discussão desses critérios no ano que
 vem, independente de nossa norma interna. Uma exigência da
-Pró-Reitoria de PG da USP nos obrigou a adiantar esta discussão (ver a
-seguir).
+Pró-Reitoria de PG da USP nos obrigou a adiantar esta discussão,
+conforme informado na mensagem que enviamos por email os orientadores
+e estudantes.
 
 Este documento apresenta a proposta da CCP para discussão na Plenária
 do Programa. Também selecionamos informações que fundamentam a
@@ -96,10 +97,11 @@ Atualmente definimos a pontuação da produção para credenciamento em
 norma interna que fica em nosso site, para nos dar mais
 flexibilidade. O Pró-reitor de Pós-Graduação impôs a todos os
 Programas que a pontuação esteja nas normas. Além disto, exigiu que a
-nova pontuação:
+nova pontuação exija:
 
-* Valorize produção acima da mediana de qualidade ou impacto
-* Inclua produção com egressos e/ou discentes
+* Produção média de um artigo por ano
+* Publicação de rtigos em periódicos nos estratos superiores de qualidade segundo a CAPES 
+* Produção com discentes ou egressos 
 
 O novo Regimento da Pós-Graduação da USP nos obriga a enviar novo
 regulamento, para apreciação pela PRPG.  A aprovação desse novo
@@ -115,11 +117,13 @@ Em agosto de 2019 a CAPES apresentou mudanças em sua avaliação aos
 coordenadores. Houve mudanças no QUALIS e na avaliação da produção do
 programa. As mudanças importantes para a pontuação da produção são:
 
-- Cada periódico terá apenas um estrato QUALIS, e não mais um estrato
-  definido por cada área de conhecimento.
-- O estrato QUALIS dos periódicos é definido pelo *quantil de fator de
-  impacto* (**qIF**), que é a proporção de periódicos de uma área que tem fator
-  de impacto (IF) menor do que o periódico avaliado[^1].
+- Cada periódico terá apenas um estrato QUALIS. Atualmente cada área
+  de conhecimento faz sua classificação, e assim muito periódicos são
+  classificados em estratos diferentes dependendo da área.
+- O estrato QUALIS único de cada periódico será definido pelo *quantil
+  de fator de impacto* (**qIF**), que é a proporção de periódicos de
+  uma área que tem fator de impacto (IF) menor do que o periódico
+  avaliado[^1].
   - Serão usadas as áreas de conhecimento e valores de qIF das bases
     [https://www.scopus.com/](SCOPUS) e
     [https://jcr.clarivate.com](Clarivate JCR).
@@ -133,7 +137,7 @@ programa. As mudanças importantes para a pontuação da produção são:
 
 ### Nova tabela QUALIS
 
-* Passamos a ter quatro estratos *A* e quatro *B*, separados por
+* O novo QUALIS  terá quatro estratos *A* e quatro *B*, separados por
   intervalos regulares de 12,5.
 * Os estratos *A* passam a indicar periódicos com qIF acima de 50% (ou
   seja, acima da mediana de IF)
@@ -182,8 +186,8 @@ orientadores do Programa.
 
 ## Proposta de pontuação
 
-- **A soma de qIF de artigos publicados nos últimos 36 meses deve ser no
-  mínimo de 160**.
+- **A soma de qIF de artigos publicados nos últimos 36 meses deve ser
+  no mínimo de 160**.
 - Outras modalidades de produção são pontuadas buscando uma
   equivalência em impacto ou horas de trabalho (ver minuta).
 - Produto com discentes ou egressos ganham bônus: pontuação
@@ -191,12 +195,13 @@ orientadores do Programa.
 
 Com esta proposta buscamos:
 
-* Atender às demandas da PRPG:
-  * sistema de pontuação objetivo;
-  * a soma de 160 pontos de qIF equivale a 3 artigos de IF superior à
-    mediana. Mas contempla diferentes perfis de produção (*e.g*, mais artigos
-    em periódicos de menor IF ou menor número em periódicos de maior
-    IF).
+* Atender às demandas da PRPG da seguinte forma:
+  * inclusão de um sistema de pontuação da produção acadêmica nas normas;
+  * propor uma alternativa mais flexível à exigência de publicação de
+    um artigo por ano. A soma de 160 pontos de qIF equivale a 3
+    artigos de IF superior à mediana. Mas contempla diferentes perfis
+    de produção (*e.g*, mais artigos em periódicos de menor IF ou
+    menor número em periódicos de maior IF);
   * valorizar produção com discente ou egresso.
 * Acompanhar as novas metodologias de avaliação de produção da CAPES;
 * Deixar margem para os outros critérios sugeridos pela CCP (outras
@@ -207,16 +212,17 @@ Com esta proposta buscamos:
 Para as análise a seguir usamos os periódicos classificados pelo
 QUALIS antigo da área de Biodiversidade e o qIF que consta na base
 SCOPUS para 2018.  O QUALIS antigo é a classificação de todos os
-periódicos da área, usada na última avaliação quadrienal (2013-2016), 
+periódicos da área, usada na última avaliação quadrienal (2013-2016),
 somando 'r length(unique(qualis$ISSN))` registros de ISSN [^3].
-Destes, `r length(unique(qsp$titulo.scopus)) + length(unique(qse$titulo.scopus))` registros ISSN estão na base SCOPUS,
-totalizando `r nrow(capes.scopus)` títulos.
+Destes, `r length(unique(qsp$titulo.scopus)) +
+length(unique(qse$titulo.scopus))` registros ISSN estão na base
+SCOPUS, totalizando `r nrow(capes.scopus)` títulos.
 
 ### Qualis antigo e novo
 
-Embora haja alguma associação entre as duas classificações QUALIS, há também
-muitos títulos que mudaram de estratos. Há muitas razões para isto,
-inclusive a criação dos estratos A3 e A4 e o rebaixamento de
+Embora haja alguma associação entre as duas classificações QUALIS, há
+também muitos títulos que mudaram de estratos. Há muitas razões para
+isto, inclusive a criação dos estratos A3 e A4 e o rebaixamento de
 periódicos de alto impacto mas considerados de pouca aderência na
 classificação antiga.
 
